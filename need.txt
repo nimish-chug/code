@@ -180,3 +180,11 @@ if __name__ == "__main__":
     start_client()
 
 
+
+
+FORMULAS
+	Packet Time=  Packet Size×8/Simulation Time
+		S = Throughput×1000×Total Attempts​/Packet Size × 8
+		G = Total Attempts×Packet Time/ 10 × 1000
+
+
