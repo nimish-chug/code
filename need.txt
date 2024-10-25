@@ -1,0 +1,182 @@
+CRC:
+
+def xor(a, b):
+    result = []
+    for i in range(1, len(b)):
+        if a[i] == b[i]:
+            result.append('0')
+        else:
+            result.append('1')
+    return ''.join(result)
+
+
+def mod2div(dividend, divisor):
+    pick = len(divisor)
+    tmp = dividend[0:pick]
+    
+    while pick < len(dividend):
+        if tmp[0] == '1':
+            tmp = xor(divisor, tmp) + dividend[pick]
+        else:
+            tmp = xor('0' * pick, tmp) + dividend[pick]
+        pick += 1
+    
+    if tmp[0] == '1':
+        tmp = xor(divisor, tmp)
+    else:
+        tmp = xor('0' * pick, tmp)
+    
+    return tmp
+
+
+def encodeData(data, key):
+    l_key = len(key)
+    appended_data = data + '0' * (l_key - 1)
+    remainder = mod2div(appended_data, key)
+    codeword = data + remainder
+    return codeword
+
+
+def checkData(received_data, key):
+    remainder = mod2div(received_data, key)
+    if '1' in remainder:
+        print("Error detected in the received data.")
+    else:
+        print("No error detected in the received data.")
+
+
+data = '11010011101100' 
+key = '1011' 
+
+
+print("Original Data: ", data)
+codeword = encodeData(data, key)
+print("Data after encoding (CRC Code): ", codeword)
+
+
+print("\nAt Receiver's End:")
+received_data = codeword  
+checkData(received_data, key)
+
+
+print("\nSimulating error in transmission:")
+received_data_with_error = '11010011101101'  
+print("Received Data with Error: ", received_data_with_error)
+checkData(received_data_with_error, key)
+
+Checksum:
+def check(b_chunks):
+    checksum = 0
+    for chunk in b_chunks:
+        checksum += int(chunk,2)
+
+    if checksum> 0xFF:
+        checksum = (checksum & 0xFF) + 1
+
+    return format(~checksum & 0xFF,'08b')
+
+def validate(b_chunks,checksum):
+
+    cal_checksum = check(b_chunks)
+    return cal_checksum == checksum
+
+print("Sender Side:")
+n = int(input("Enter the number of binary chunks to send: "))
+b_chunks = []
+
+for i in range(n):
+    b_chunks.append(input("Enter a binary chunk: "))
+
+checksum = check(b_chunks)
+print(f"Computed Checksum (Sender): {checksum}")
+
+print("\nReceiver Side:")
+b_chunks_r = []
+for i in range(n):
+    b_chunks_r.append(input("Enter a binary chunk: "))
+validated = validate(b_chunks_r,checksum)
+
+if validated:
+    print("Checksum valid: No error detected.")
+else:
+    print("Checksum invalid: Error detected.")
+
+Dijkstras:
+import heapq
+
+def dijkstra(graph, start):
+    queue = []
+    distances = {node: float('infinity') for node in graph}
+    distances[start] = 0
+    heapq.heappush(queue, (0, start))
+
+    while queue:
+        current_distance, current_node = heapq.heappop(queue)
+
+        if current_distance > distances[current_node]:
+            continue
+
+        for neighbor, weight in graph[current_node].items():
+            distance = current_distance + weight
+
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                heapq.heappush(queue, (distance, neighbor))
+
+    return distances
+
+def main():
+    graph = {
+        'A': {'B': 1, 'C': 4},
+        'B': {'A': 1, 'C': 2, 'D': 5},
+        'C': {'A': 4, 'B': 2, 'D': 1},
+        'D': {'B': 5, 'C': 1}
+    }
+
+    start_node = 'A'
+    shortest_distances = dijkstra(graph, start_node)
+
+    print("Shortest distances from node", start_node)
+    for node, distance in shortest_distances.items():
+        print(f"Distance to {node}: {distance}")
+
+if __name__ == "__main__":
+    main()
+
+
+
+server
+import socket
+
+def start_server(host='127.0.0.1', port=65432):
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((host, port))
+    server_socket.listen()
+    print(f'Server listening on {host}:{port}')
+
+    while True:
+        conn, addr = server_socket.accept()
+        print(f'Connection from {addr}')
+        data = conn.recv(1024)
+        print(f'Received: {data.decode()}')
+        conn.sendall(b'Hello from server!')
+        conn.close()
+
+if __name__ == "__main__":
+    start_server()
+
+Client
+import socket
+
+def start_client(host='127.0.0.1', port=65432):
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((host, port))
+    client_socket.sendall(b'Hello from Client!')
+    data = client_socket.recv(1024)
+    print(f'Received: {data.decode()}')
+    client_socket.close()
+
+if __name__ == "__main__":
+    start_client()
+
+
